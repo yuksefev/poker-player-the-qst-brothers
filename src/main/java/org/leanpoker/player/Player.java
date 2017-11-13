@@ -42,9 +42,9 @@ public class Player {
 		}
 		if (rankValues.get(0).equalsIgnoreCase(rankValues.get(1))) {
 			return true;
-		} else if(!(rankValues.get(0).matches("[0-9]") && rankValues.get(0).matches("[0-9]"))){
+		} else if(!(rankValues.get(0).matches("[0-9]") && rankValues.get(1).matches("[0-9]"))){
 			return true;
-		}
+		} 
 		return false;
 	}
 
