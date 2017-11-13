@@ -44,7 +44,9 @@ public class Player {
 			return true;
 		} else if(!(rankValues.get(0).matches("[0-9]") && rankValues.get(1).matches("[0-9]"))){
 			return true;
-		} 
+		} else if(rankValues.get(0).equalsIgnoreCase("A") || rankValues.get(1).equalsIgnoreCase("A")){
+			return true;
+		}
 		return false;
 	}
 
