@@ -1,7 +1,9 @@
 package org.leanpoker.player;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -45,18 +47,25 @@ public class Player {
 			rankValues.add(holeCardsArray.get(x).getAsJsonObject().get("rank").getAsString());
 			suitValues.add(holeCardsArray.get(x).getAsJsonObject().get("suit").getAsString());
 		}
-		shouldBet = checkRankValue(rankValues);
+		shouldBet = checkRankValueHighPrio(rankValues);
 		if(!shouldBet) {
 			int communityCardsCount = getCommunityCardsCount(request);
 			if(communityCardsCount == 0) {
-				shouldBet = true;
+				shouldBet = checkRankValueMiddlePrio(rankValues);
 			} else {
 				shouldBet = checkRankValueForSecondRound(request, rankValues);
+				if(!shouldBet) {
+					checkSuitValue(request, suitValues);
+				}
 			}
 		}
 		return shouldBet;
 	}
 	
+	private static void checkSuitValue(JsonElement request, List<String> suitValues) {
+		Map<String, Integer> suitMaps = new HashMap<>();
+	}
+
 	private static boolean checkRankValueForSecondRound(JsonElement request, List<String> rankValues) {
 		JsonArray communityCards = request.getAsJsonObject().get("community_cards").getAsJsonArray();
 //		Set<String> cardsCheckSet = new HashSet<>();
@@ -67,14 +76,6 @@ public class Player {
 			}
 		}
 		return false;
-	}
-
-	private static int getCommunityCardsCount(JsonElement request) {
-		return request.getAsJsonObject().get("community_cards").getAsJsonArray().size();
-	}
-	
-	private static boolean checkRankValue(List<String> rankValues) {
-		return checkRankValueHighPrio(rankValues) || checkRankValueMiddlePrio(rankValues);
 	}
 	
 	private static boolean checkRankValueHighPrio(List<String> rankValues) {
@@ -88,12 +89,25 @@ public class Player {
 	}
 	
 	private static boolean checkRankValueMiddlePrio(List<String> rankValues) {
-		if(rankValues.get(0).equalsIgnoreCase("A") || rankValues.get(1).equalsIgnoreCase("A")){
+		if(checkRank(rankValues.get(0), "A", "K", "Q", "J") || checkRank(rankValues.get(1), "A", "K", "Q", "J")){
 			return true;
 		} 
 		return false;
 	}
+	
+	private static boolean checkRank(String value, String... rank) {
+		for (int i = 0; i < rank.length; i++) {
+			if(value.equalsIgnoreCase(rank[i])) {
+				return true;
+			}
+		}
+		return false;
+	}
 
+	private static int getCommunityCardsCount(JsonElement request) {
+		return request.getAsJsonObject().get("community_cards").getAsJsonArray().size();
+	}
+	
 	public static void showdown(JsonElement game) {
 		
 	}
