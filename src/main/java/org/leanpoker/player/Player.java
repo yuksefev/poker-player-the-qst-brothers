@@ -1,9 +1,7 @@
 package org.leanpoker.player;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -16,6 +14,7 @@ public class Player {
 	public static int betRequest(JsonElement request) {
 		JsonArray players = request.getAsJsonObject().get("players").getAsJsonArray();
 		int bet = 0;
+		int ourBet = 0;
 		int i = 0;
 		boolean betRequired = true;
 		while (players.size() > i) {
@@ -23,6 +22,7 @@ public class Player {
 			int betPlayer = playersJsonObject.get("bet").getAsBigInteger().intValue();
 			if (playersJsonObject.get("name").getAsString().equalsIgnoreCase("The QST Brothers")) {
 				betRequired = shouldSetBetValue(request, playersJsonObject);
+				ourBet = betPlayer;
 			}
 
 			if (bet < betPlayer) {
@@ -31,12 +31,13 @@ public class Player {
 			i++;
 		}
 		if (betRequired) {
-			return bet + 1;
+			return bet  + 1;
 		}
 		return 0;
 	}
 
 	private static boolean shouldSetBetValue(JsonElement request, JsonObject playersJsonObject) {
+		boolean shouldBet = true;
 		JsonArray holeCardsArray = playersJsonObject.get("hole_cards").getAsJsonArray();
 		List<String> rankValues = new ArrayList<>();
 		List<String> suitValues = new ArrayList<>();
@@ -44,51 +45,56 @@ public class Player {
 			rankValues.add(holeCardsArray.get(x).getAsJsonObject().get("rank").getAsString());
 			suitValues.add(holeCardsArray.get(x).getAsJsonObject().get("suit").getAsString());
 		}
-		if (rankValues.get(0).equalsIgnoreCase(rankValues.get(1))) {
-			return true;
-		} else if(!rankValues.get(0).matches("[0-9]") && !rankValues.get(1).matches("[0-9]")){
-			return true;
-		} else if(rankValues.get(0).equalsIgnoreCase("A") || rankValues.get(1).equalsIgnoreCase("A")){
-			return true;
-		} else {
-//			Map<String> cardsCheckSet = new HashSet<>();
-//			JsonArray communityCards = request.getAsJsonObject().get("community_cards").getAsJsonArray();
-//			if(communityCards.size() == 0) return false;
-//			
-//			for (int x = 0; x < communityCards.size(); x++) {
-//				cardsCheckSet.add(communityCards.get(x).getAsJsonObject().get("suit").getAsString());
-//			}
-//			cardsCheckSet.add(suitValues.get(0));
-//			cardsCheckSet.add(suitValues.get(1));
-//			if(communityCards.size() == 3) {
-//				if(cardsCheckSet.size() == 1) {
-//					return true;
-//				}
-//			} else if(communityCards.size() == 4) {
-//				if(cardsCheckSet.size() == 2) {
-//					return true;
-//				}
-//			} else if(communityCards.size() == 5) {
-//				if(cardsCheckSet.size() == 3) {
-//					return true;
-//				}
-//			}
+		shouldBet = checkRankValue(rankValues);
+		if(!shouldBet) {
+			int communityCardsCount = getCommunityCardsCount(request);
+			if(communityCardsCount == 0) {
+				shouldBet = true;
+			} else {
+				shouldBet = checkRankValueForSecondRound(request, rankValues);
+			}
+		}
+		return shouldBet;
+	}
+	
+	private static boolean checkRankValueForSecondRound(JsonElement request, List<String> rankValues) {
+		JsonArray communityCards = request.getAsJsonObject().get("community_cards").getAsJsonArray();
+//		Set<String> cardsCheckSet = new HashSet<>();
+		for (int x = 0; x < communityCards.size(); x++) {
+			String rankCommunityCard = communityCards.get(x).getAsJsonObject().get("rank").getAsString();
+			if(rankValues.contains(rankCommunityCard)) {
+				return true;
+			}
 		}
 		return false;
 	}
 
+	private static int getCommunityCardsCount(JsonElement request) {
+		return request.getAsJsonObject().get("community_cards").getAsJsonArray().size();
+	}
+	
+	private static boolean checkRankValue(List<String> rankValues) {
+		return checkRankValueHighPrio(rankValues) || checkRankValueMiddlePrio(rankValues);
+	}
+	
+	private static boolean checkRankValueHighPrio(List<String> rankValues) {
+		if (rankValues.get(0).equalsIgnoreCase(rankValues.get(1))) {
+			return true;
+		} else if(!rankValues.get(0).matches("[0-9]") && !rankValues.get(1).matches("[0-9]")){
+			return true;
+		} 
+		
+		return false;
+	}
+	
+	private static boolean checkRankValueMiddlePrio(List<String> rankValues) {
+		if(rankValues.get(0).equalsIgnoreCase("A") || rankValues.get(1).equalsIgnoreCase("A")){
+			return true;
+		} 
+		return false;
+	}
+
 	public static void showdown(JsonElement game) {
-//		JsonArray players = game.getAsJsonObject().get("players").getAsJsonArray();
-//		int bet = 0;
-//		int i = 0;
-//		boolean betRequired = true;
-//		while (players.size() > i) {
-//			JsonArray holeCardsArray = players.get(i).getAsJsonObject().get("hole_cards").getAsJsonArray();
-//			List<String> suitValues = new ArrayList<>();
-//			for (int x = 0; x < holeCardsArray.size(); x++) {
-//				suitValues.add(holeCardsArray.get(x).getAsJsonObject().get("suit").getAsString());
-//			}
-//			
-//		}
+		
 	}
 }
