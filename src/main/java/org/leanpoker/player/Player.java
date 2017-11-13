@@ -53,17 +53,19 @@ public class Player {
 			if(communityCardsCount == 0) {
 				shouldBet = checkRankValueMiddlePrio(rankValues);
 			} else {
-				shouldBet = checkRankValueForSecondRound(request, rankValues);
-				if(!shouldBet) {
-					checkSuitValue(request, suitValues);
-				}
+				shouldBet = checkRankValueForSecondRound(request, rankValues) || checkSuitValue(request, playersJsonObject, suitValues);
 			}
 		}
 		return shouldBet;
 	}
 	
-	private static void checkSuitValue(JsonElement request, List<String> suitValues) {
-		Map<String, Integer> suitMaps = new HashMap<>();
+	private static boolean checkSuitValue(JsonElement request, JsonObject playersJsonObject, List<String> suitValues) {
+		// Check Suit of the Cards
+		Map<String, Integer> suitMaps = getActualFarbenStats(request, playersJsonObject);
+		if(suitMaps.get(suitValues.get(0)) >= 4 || suitMaps.get(suitValues.get(1)) >= 4) {
+			return true;
+		}
+		return false;
 	}
 
 	private static boolean checkRankValueForSecondRound(JsonElement request, List<String> rankValues) {
@@ -106,6 +108,53 @@ public class Player {
 
 	private static int getCommunityCardsCount(JsonElement request) {
 		return request.getAsJsonObject().get("community_cards").getAsJsonArray().size();
+	}
+	
+	private static Map<String, Integer> getActualFarbenStats(JsonElement request, JsonObject playersJsonObject) {
+        Map<String, Integer> result = new HashMap<>();
+
+        // 1. read our cards:
+        JsonArray holeCardsArray = playersJsonObject.get("hole_cards").getAsJsonArray();
+        int actualSpades = 0;
+        int actualHearts = 0;
+        int actualClubs = 0;
+        int actualOther = 0;
+
+        for (int x = 0; x < holeCardsArray.size(); x++) {
+            String suit = holeCardsArray.get(x).getAsJsonObject().get("suit").getAsString();
+
+            if (suit.equals("spades")) {
+                actualSpades++;
+            } else if (suit.equals("clubs")) {
+                actualClubs++;
+            } else if (suit.equals("hearts")) {
+                actualHearts++;
+            } else {
+                actualOther++;
+            }
+        }
+
+        // read comm cards
+        JsonArray communityCards = request.getAsJsonObject().get("community_cards").getAsJsonArray();
+        for (int x = 0; x < communityCards.size(); x++) {
+            String suit = communityCards.get(x).getAsJsonObject().get("suit").getAsString();
+            if (suit.equals("spades")) {
+                actualSpades++;
+            } else if (suit.equals("clubs")) {
+                actualClubs++;
+            } else if (suit.equals("hearts")) {
+                actualHearts++;
+            } else {
+                actualOther++;
+            }
+        }
+
+        result.put("spades", new Integer(actualSpades));
+        result.put("hearts", new Integer(actualHearts));
+        result.put("clubs", new Integer(actualClubs));
+        result.put("other", new Integer(actualOther));
+
+        return result;
 	}
 	
 	public static void showdown(JsonElement game) {
