@@ -18,7 +18,7 @@ public class Player {
     		int betPlayer = players.get(i).getAsJsonObject().get("bet").getAsBigInteger().intValue();
     		if(bet < betPlayer) {
     			bet = betPlayer;
-    		}
+    		} 
     		i++;
     	}
     	return bet + 1;
