@@ -3,11 +3,13 @@ package org.leanpoker.player;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.sun.xml.internal.ws.util.StringUtils;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class Player {
 
@@ -43,6 +45,8 @@ public class Player {
 			rankValues.add(holeCardsArray.get(x).getAsJsonObject().get("rank").getAsString());
 		}
 		if (rankValues.get(0).equalsIgnoreCase(rankValues.get(1))) {
+			return true;
+		} else if(!(rankValues.get(0).matches("[0-9]") && rankValues.get(0).matches("[0-9]"))){
 			return true;
 		}
 		return false;
